@@ -1,0 +1,6 @@
+# Root-level requirements.txt — read by Vercel during Python function build.
+# Keep in sync with backend/requirements.txt.
+flask==3.0.3
+flask-cors==4.0.1
+python-dotenv==1.0.1
+requests==2.31.0

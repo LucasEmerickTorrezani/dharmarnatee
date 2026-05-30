@@ -215,6 +215,74 @@ is_cache_fresh(cached_record)                 # Verifica TTL (apenas file; Redis
 
 ---
 
+## Deploy em produção
+
+O DharMarnatee usa uma arquitetura separada para frontend e backend em produção:
+
+| Componente | Plataforma |
+|------------|-----------|
+| Frontend (estático) | GitHub Pages |
+| Backend / API | Vercel (Python Functions) |
+| Cache | Upstash Redis |
+
+### Backend — Vercel
+
+1. Importe o repositório em [vercel.com](https://vercel.com)
+2. O Vercel detecta automaticamente `api/index.py` e `vercel.json`
+3. Configure as variáveis de ambiente abaixo no painel do Vercel
+
+#### Variáveis de ambiente no Vercel
+
+| Variável | Exemplo | Obrigatório | Descrição |
+|----------|---------|-------------|-----------|
+| `STORMGLASS_API_KEY` | `abc123` | ✅ | Chave da API Stormglass |
+| `CACHE_BACKEND` | `redis` | ✅ | Sempre `redis` no Vercel (sem filesystem persistente) |
+| `UPSTASH_REDIS_REST_URL` | `https://x.upstash.io` | ✅ | URL REST da database Upstash |
+| `UPSTASH_REDIS_REST_TOKEN` | `AX...` | ✅ | Token REST da database Upstash |
+| `WEATHER_MARINE_CACHE_TTL_HOURS` | `1` | — | TTL clima/vento/ondas (padrão: 1h) |
+| `TIDE_CACHE_TTL_HOURS` | `24` | — | TTL maré (padrão: 24h) |
+| `FLASK_ENV` | `production` | — | Desativa o modo debug |
+| `CORS_ORIGINS` | `https://user.github.io` | — | Restrinja ao domínio do GitHub Pages |
+
+### Frontend — GitHub Pages
+
+1. No GitHub, acesse **Settings → Pages**
+2. Em **Source**, selecione o branch `main` e o diretório `/frontend`
+3. O site será publicado em `https://yourusername.github.io/repository-name`
+
+### Conectar frontend ao backend
+
+Após o deploy no Vercel, copie a URL gerada (ex: `https://dhar-marnatee-api.vercel.app`).
+
+**Opção 1** — Edite diretamente a primeira linha de `frontend/script.js`:
+
+```javascript
+const API_BASE = window.API_BASE || 'https://dhar-marnatee-api.vercel.app';
+```
+
+**Opção 2** — Injete antes do `<script src="script.js">` em `frontend/index.html`:
+
+```html
+<script>window.API_BASE = 'https://dhar-marnatee-api.vercel.app';</script>
+<script src="script.js"></script>
+```
+
+### CORS em produção
+
+Para restringir o backend ao domínio exato do GitHub Pages, adicione no Vercel:
+
+```
+CORS_ORIGINS=https://yourusername.github.io
+```
+
+Para múltiplas origens, separe por vírgula:
+
+```
+CORS_ORIGINS=https://yourusername.github.io,https://custom-domain.com
+```
+
+---
+
 ## Estrutura do projeto
 
 ```

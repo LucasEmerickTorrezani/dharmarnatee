@@ -13,7 +13,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+# CORS_ORIGINS: "*" para todos (dev) ou domínio específico em produção.
+# Exemplo: CORS_ORIGINS=https://yourusername.github.io (defina no Vercel)
+_cors_origins_env = os.getenv("CORS_ORIGINS", "*")
+_cors_origins = (
+    _cors_origins_env
+    if _cors_origins_env == "*"
+    else [o.strip() for o in _cors_origins_env.split(",")]
+)
+CORS(app, origins=_cors_origins)
 
 BASE_DIR = Path(__file__).parent
 CACHE_DIR = BASE_DIR / "cache"
