@@ -1,7 +1,7 @@
 // ── Configuration ──────────────────────────────────────────────
 // For production, set window.API_BASE before loading this script,
 // e.g. <script>window.API_BASE = 'https://api.yourdomain.com';</script>
-const API_BASE = window.API_BASE || "https://dharmarnatee.vercel.app";
+const API_BASE = window.API_BASE || 'https://dharmarnatee.vercel.app';
 
 // ── DOM refs ────────────────────────────────────────────────────
 const searchInput = document.getElementById("searchInput");

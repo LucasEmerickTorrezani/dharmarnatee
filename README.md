@@ -225,6 +225,25 @@ O DharMarnatee usa uma arquitetura separada para frontend e backend em produçã
 | Backend / API | Vercel (Python Functions) |
 | Cache | Upstash Redis |
 
+### Frontend — GitHub Actions → GitHub Pages
+
+O frontend é publicado automaticamente via **GitHub Actions** toda vez que arquivos em `frontend/` ou `.github/workflows/deploy-frontend.yml` são alterados no branch `main`.
+
+O workflow está em `.github/workflows/deploy-frontend.yml` e usa as actions oficiais:
+- `actions/checkout@v4` — clona o repositório
+- `actions/configure-pages@v5` — prepara o ambiente de Pages
+- `actions/upload-pages-artifact@v3` — empacota apenas `frontend/`
+- `actions/deploy-pages@v4` — publica no GitHub Pages
+
+A URL do backend Vercel está configurada diretamente em `frontend/script.js`:
+```javascript
+const API_BASE = window.API_BASE || 'https://dharmarnatee.vercel.app';
+```
+
+Nenhum segredo é incluído no frontend. Todas as chaves de API ficam exclusivamente nas variáveis de ambiente do Vercel.
+
+---
+
 ### Backend — Vercel
 
 1. Importe o repositório em [vercel.com](https://vercel.com)
