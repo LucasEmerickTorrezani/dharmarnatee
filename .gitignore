@@ -1,0 +1,41 @@
+# Variáveis de ambiente — nunca versionar
+.env
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+
+# Cache gerado pelo backend
+backend/cache/*.json
+backend/cache/*.cache
+# Mantém o diretório no git
+!backend/cache/.gitkeep
+
+# Sistemas operacionais
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.claude/
+# Logs
+*.log
+npm-debug.log*
+
+# Node (caso use ferramentas de build no futuro)
+node_modules/
