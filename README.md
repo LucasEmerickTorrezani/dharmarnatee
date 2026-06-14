@@ -2,7 +2,7 @@
 
 **Clima, vento, ondas e maré**
 
-Aplicativo web mobile-first para consulta de condições marinhas e meteorológicas no litoral brasileiro. Desenvolvido como presente para um/a pesquisador/a, com foco em transparência de dados, design limpo e responsividade mobile.
+Aplicativo para consulta de condições marinhas e meteorológicas no litoral brasileiro. Desenvolvido como presente para um/a pesquisador/a, com foco em transparência de dados, design limpo e responsividade mobile.
 
 ---
 
@@ -25,10 +25,10 @@ O usuário digita o nome de uma cidade, praia ou ponto costeiro. O app exibe car
 | Componente | Tecnologia |
 |------------|------------|
 | Backend | Python 3.11+ · Flask · Flask-CORS |
-| Frontend | HTML5 · CSS3 · JavaScript (puro) |
+| Frontend | HTML5 · CSS3 · JavaScript  |
 | Dados marinhos | [Stormglass API](https://stormglass.io) |
 | Geocoding fallback | [Open-Meteo Geocoding API](https://open-meteo.com/en/docs/geocoding-api) |
-| Localidades | `backend/locations.json` (curado) |
+| Localidades | `backend/locations.json`  |
 | Cache local | Arquivo JSON em `backend/cache/` |
 
 ---
