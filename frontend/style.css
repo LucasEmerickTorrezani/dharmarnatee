@@ -27,8 +27,8 @@
 
   /* Card accent colors */
   --clima-color: #e65100;
-  --vento-color: #1565c0;
-  --ondas-color: #00695c;
+  --vento-color: #00695c;
+  --ondas-color: #1565c0;
   --mare-color: #4527a0;
 
   /* Utility */
@@ -386,8 +386,8 @@ body {
   }
 }
 
-/* ── Location strip ───────────────────────────────────────────── */
-.location-strip {
+/* ── Location + conditions summary card ───────────────────────── */
+.summary-card {
   background: var(--surface);
   border-radius: var(--radius-sm);
   padding: 12px 16px;
@@ -445,6 +445,50 @@ body {
   color: #1565c0;
 }
 
+.summary-top {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--bg);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.summary-rating {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  cursor: default;
+}
+
+.summary-updated {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.summary-detail {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* ── Weather condition line (Clima card) ──────────────────────── */
+.card-condition {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: -4px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-condition-icon {
+  font-size: 1rem;
+}
+
+
 /* ── Cards grid ───────────────────────────────────────────────── */
 .cards-grid {
   display: grid;
@@ -489,31 +533,6 @@ body {
 }
 .card--fonte::before {
   background: var(--text-muted);
-}
-
-/* Card decorative background blob */
-.card::after {
-  content: "";
-  position: absolute;
-  top: -20px;
-  right: -20px;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  opacity: 0.06;
-}
-
-.card--clima::after {
-  background: var(--clima-color);
-}
-.card--vento::after {
-  background: var(--vento-color);
-}
-.card--ondas::after {
-  background: var(--ondas-color);
-}
-.card--mare::after {
-  background: var(--mare-color);
 }
 
 /* ── Card internals ───────────────────────────────────────────── */
@@ -653,20 +672,284 @@ body {
   margin-top: 2px;
 }
 
+/* ── Próximas horas: forecast snapshots + wind/wave trend charts ── */
+.card--forecast {
+  padding: 14px 16px 12px;
+  margin-bottom: 12px;
+}
+
+.card--forecast .card-header {
+  margin-bottom: 6px;
+}
+
+.card--forecast::before {
+  background: var(--ocean);
+}
+.card--forecast::after {
+  background: var(--ocean);
+}
+
+.card--forecast .card-title {
+  color: var(--ocean);
+}
+
+.forecast-strip-track {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(64px, 1fr));
+  gap: 6px;
+}
+
+.forecast-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  text-align: center;
+}
+
+.forecast-item-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.forecast-item-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  margin: 2px 0;
+}
+
+.forecast-item-temp {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.forecast-item-wind {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.forecast-item-rain {
+  font-size: 0.65rem;
+  color: var(--ocean);
+  white-space: nowrap;
+}
+
+/* Divider between the hourly snapshot strip and the wind/wave trend charts */
+.forecast-strip-track + .trend-stack {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bg);
+}
+
+/* Wind / Waves / Tide always stacked full-width — never side-by-side columns */
+.trend-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.trend-stack > .trend-block + .trend-block {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--bg);
+}
+
+.trend-block-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.trend-legend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.62rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 6px;
+}
+.legend-dot:first-child {
+  margin-left: 0;
+}
+.legend-dot--wind {
+  background: var(--vento-color);
+}
+.legend-dash {
+  width: 14px;
+  height: 0;
+  border-top: 2px dashed var(--vento-color);
+  opacity: 0.6;
+  display: inline-block;
+  margin-left: 6px;
+  margin-right: 2px;
+}
+
+.chart-wrap {
+  position: relative;
+  line-height: 0;
+  width: 100%;
+}
+
+.sparkline {
+  width: 100%;
+  height: 64px;
+  display: block;
+  overflow: visible;
+}
+
+.sparkline-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sparkline-line.wind {
+  stroke: var(--vento-color);
+}
+.sparkline-line.gust {
+  stroke: var(--vento-color);
+  opacity: 0.45;
+}
+.sparkline-line.wave {
+  stroke: var(--ondas-color);
+}
+
+/* Highlight dot only appears during hover/tap — no permanent chart decoration */
+.chart-hover-dot {
+  opacity: 0;
+  transition: opacity 0.1s ease;
+  pointer-events: none;
+}
+.chart-hover-dot.wind {
+  fill: var(--vento-color);
+}
+.chart-hover-dot.gust {
+  fill: var(--vento-color);
+}
+.chart-hover-dot.wave {
+  fill: var(--ondas-color);
+}
+
+/* ── Chart tooltip ─────────────────────────────────────────────── */
+.chart-tooltip {
+  position: absolute;
+  top: -6px;
+  transform: translate(-50%, -100%);
+  background: var(--navy);
+  color: #fff;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  padding: 5px 9px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow-md);
+  z-index: 5;
+}
+.chart-tooltip--start {
+  transform: translate(0, -100%);
+}
+.chart-tooltip--end {
+  transform: translate(-100%, -100%);
+}
+.chart-tooltip-time {
+  font-weight: 700;
+  opacity: 0.8;
+  margin-bottom: 1px;
+}
+
+/* ── Chart time axis ──────────────────────────────────────────── */
+.chart-axis {
+  position: relative;
+  height: 13px;
+  margin-top: 1px;
+}
+.chart-axis-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.chart-axis-tick--start {
+  transform: translateX(0);
+}
+.chart-axis-tick--end {
+  transform: translateX(-100%);
+}
+
+/* ── Now / Peak / +Xh stat row (replaces the old wrapping sentence) ── */
+.chart-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-top: 5px;
+  text-align: center;
+}
+.chart-stat-label {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 2px;
+}
+.chart-stat-value {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.chart-stat-time {
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-top: 1px;
+  white-space: nowrap;
+}
+
 /* ── Source card ──────────────────────────────────────────────── */
 .card--fonte {
-  padding: 14px 16px;
+  padding: 10px 14px;
 }
 
 .fonte-header {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .fonte-title {
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -676,14 +959,14 @@ body {
 .fonte-rows {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 2px;
 }
 
 .fonte-row {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-size: 0.78rem;
+  font-size: 0.7rem;
 }
 
 .fonte-key {
@@ -700,12 +983,12 @@ body {
 }
 
 .fonte-note {
-  margin-top: 10px;
-  padding-top: 10px;
+  margin-top: 6px;
+  padding-top: 6px;
   border-top: 1px solid var(--bg);
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.35;
   font-style: italic;
 }
 
@@ -770,6 +1053,17 @@ body {
   .search-btn {
     padding: 10px 12px;
     font-size: 0.85rem;
+  }
+  .forecast-strip-track {
+    grid-auto-columns: minmax(66px, 1fr);
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding-bottom: 2px;
+  }
+  .forecast-item {
+    scroll-snap-align: start;
   }
 }
 .brand-logo {

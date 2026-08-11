@@ -302,6 +302,29 @@ def degrees_to_direction_text(degrees) -> str | None:
     return directions[round(float(degrees) / 45) % 8]
 
 
+#: Thresholds used to derive a simple weather condition (icon + label) from
+#: Stormglass's cloudCover (%) and precipitation (mm/h) fields, since Stormglass
+#: has no dedicated "condition" field. Tweak freely.
+CONDITION_RAIN_MM_THRESHOLD = 0.2
+CONDITION_CLOUD_OVERCAST_PCT = 80
+CONDITION_CLOUD_PARTLY_PCT = 35
+
+
+def derive_condition(cloud_cover, precipitation) -> dict | None:
+    """Map real cloudCover/precipitation values to a compact icon + label."""
+    if cloud_cover is None and precipitation is None:
+        return None
+    precip = precipitation or 0
+    cloud = cloud_cover if cloud_cover is not None else 0
+    if precip >= CONDITION_RAIN_MM_THRESHOLD:
+        return {"icon": "🌧️", "label": "Chuva"}
+    if cloud >= CONDITION_CLOUD_OVERCAST_PCT:
+        return {"icon": "☁️", "label": "Nublado"}
+    if cloud >= CONDITION_CLOUD_PARTLY_PCT:
+        return {"icon": "🌤️", "label": "Parcialmente nublado"}
+    return {"icon": "☀️", "label": "Céu limpo"}
+
+
 def calculate_apparent_temperature(temp_c, humidity) -> float | None:
     """
     Apparent temperature (heat index) via NOAA Rothfusz regression.
@@ -341,10 +364,48 @@ def _sg_value(data_point, preferred_sources=None) -> float | None:
     return None
 
 
+#: How many hours ahead to request for the short-term forecast (covers the
+#: "Next hours" strip and the "next 12 hours" mini-charts).
+FORECAST_HOURS_AHEAD = 12
+
+
+def _parse_hour_entry(h: dict, preferred: list) -> dict:
+    """Convert one raw Stormglass hourly entry into the shape the frontend uses.
+    Wind speed/gusts are converted from m/s directly to km/h (m/s * 3.6),
+    which is equivalent to converting to knots and then to km/h (1 kn = 1.852 km/h).
+    """
+    wind_ms = _sg_value(h.get("windSpeed", {}), preferred)
+    gust_ms = _sg_value(h.get("gust", {}), preferred)
+    temp = _sg_value(h.get("airTemperature", {}), preferred)
+    humidity = _sg_value(h.get("humidity", {}), preferred)
+    cloud_cover = _sg_value(h.get("cloudCover", {}), preferred)
+    precipitation = _sg_value(h.get("precipitation", {}), preferred)
+    wave_height = _sg_value(h.get("waveHeight", {}), preferred)
+    wave_period = _sg_value(h.get("wavePeriod", {}), preferred)
+    wave_direction = _sg_value(h.get("waveDirection", {}), preferred)
+    wind_direction = _sg_value(h.get("windDirection", {}), preferred)
+
+    return {
+        "time": h.get("time"),
+        "airTemperature": round(temp, 1) if temp is not None else None,
+        "humidity": round(humidity) if humidity is not None else None,
+        "windSpeed": round(wind_ms * 3.6, 1) if wind_ms is not None else None,
+        "windDirection": wind_direction,
+        "gusts": round(gust_ms * 3.6, 1) if gust_ms is not None else None,
+        "waveHeight": round(wave_height, 2) if wave_height is not None else None,
+        "wavePeriod": wave_period,
+        "waveDirection": wave_direction,
+        "cloudCover": round(cloud_cover) if cloud_cover is not None else None,
+        "precipitation": round(precipitation, 1) if precipitation is not None else None,
+        "condition": derive_condition(cloud_cover, precipitation),
+    }
+
+
 def get_stormglass_weather_and_marine(lat: float, lng: float) -> dict:
     """
-    Fetch weather and marine parameters from Stormglass /v2/weather/point.
-    Wind speed is converted from m/s to knots (1 m/s = 1.94384 kn).
+    Fetch weather and marine parameters from Stormglass /v2/weather/point,
+    covering "now" plus the next FORECAST_HOURS_AHEAD hours in a single request.
+    Wind speed is converted from m/s directly to km/h (m/s * 3.6).
 
     If field names or sources differ from what is documented here, enable DEBUG
     logging to inspect the raw Stormglass response and adjust accordingly.
@@ -353,7 +414,7 @@ def get_stormglass_weather_and_marine(lat: float, lng: float) -> dict:
         return {"error": "api_key_missing"}
 
     params_list = [
-        "airTemperature", "humidity",
+        "airTemperature", "humidity", "cloudCover", "precipitation",
         "windSpeed", "windDirection", "gust",
         "waveHeight", "wavePeriod", "waveDirection",
     ]
@@ -364,7 +425,7 @@ def get_stormglass_weather_and_marine(lat: float, lng: float) -> dict:
         "lng": lng,
         "params": ",".join(params_list),
         "start": now.isoformat(),
-        "end": (now + timedelta(hours=2)).isoformat(),
+        "end": (now + timedelta(hours=FORECAST_HOURS_AHEAD)).isoformat(),
     }
     headers = {"Authorization": STORMGLASS_API_KEY}
 
@@ -385,24 +446,23 @@ def get_stormglass_weather_and_marine(lat: float, lng: float) -> dict:
         if not hours:
             return {"error": "no_data"}
 
-        h = hours[0]
         preferred = ["sg", "noaa", "icon", "meto", "meteo", "fcoo", "dwd"]
-
-        wind_ms = _sg_value(h.get("windSpeed", {}), preferred)
-        gust_ms = _sg_value(h.get("gust", {}), preferred)
-        temp = _sg_value(h.get("airTemperature", {}), preferred)
-        humidity = _sg_value(h.get("humidity", {}), preferred)
+        parsed_hours = [_parse_hour_entry(h, preferred) for h in hours]
+        current = parsed_hours[0]
 
         return {
-            "airTemperature": round(temp, 1) if temp is not None else None,
-            "humidity": round(humidity) if humidity is not None else None,
-            "windSpeed": round(wind_ms * 1.94384, 1) if wind_ms is not None else None,
-            "windDirection": _sg_value(h.get("windDirection", {}), preferred),
-            "gusts": round(gust_ms * 1.94384, 1) if gust_ms is not None else None,
-            "waveHeight": _sg_value(h.get("waveHeight", {}), preferred),
-            "wavePeriod": _sg_value(h.get("wavePeriod", {}), preferred),
-            "waveDirection": _sg_value(h.get("waveDirection", {}), preferred),
-            "updatedAt": h.get("time"),
+            "airTemperature": current["airTemperature"],
+            "humidity": current["humidity"],
+            "windSpeed": current["windSpeed"],
+            "windDirection": current["windDirection"],
+            "gusts": current["gusts"],
+            "waveHeight": current["waveHeight"],
+            "wavePeriod": current["wavePeriod"],
+            "waveDirection": current["waveDirection"],
+            "condition": current["condition"],
+            "precipitation": current["precipitation"],
+            "updatedAt": current["time"],
+            "forecast": parsed_hours,
         }
 
     except requests.exceptions.Timeout:
@@ -512,14 +572,16 @@ def format_conditions_response(
         "temperature": temp,
         "feelsLike": calculate_apparent_temperature(temp, humidity),
         "humidity": humidity,
-        # Stormglass does not provide a text weather condition label
-        "condition": None,
+        # Derived from real cloudCover/precipitation values — see derive_condition()
+        "condition": marine_data.get("condition"),
+        # Real precipitation amount (mm/h). Stormglass has no probability (%) field.
+        "rainMm": marine_data.get("precipitation"),
     }
 
     wind_dir = marine_data.get("windDirection")
     wind = {
         "speed": marine_data.get("windSpeed"),
-        "unit": "nós",
+        "unit": "km/h",
         "direction": round(float(wind_dir)) if wind_dir is not None else None,
         "directionText": degrees_to_direction_text(wind_dir),
         "gusts": marine_data.get("gusts"),
@@ -550,6 +612,21 @@ def format_conditions_response(
 
     updated_at = marine_data.get("updatedAt") or datetime.now(timezone.utc).isoformat()
 
+    forecast = [
+        {
+            "time": h.get("time"),
+            "temperature": h.get("airTemperature"),
+            "condition": h.get("condition"),
+            "windSpeed": h.get("windSpeed"),
+            "gusts": h.get("gusts"),
+            "waveHeight": h.get("waveHeight"),
+            "wavePeriod": round(h["wavePeriod"]) if h.get("wavePeriod") is not None else None,
+            "waveDirectionText": degrees_to_direction_text(h.get("waveDirection")),
+            "rainMm": h.get("precipitation"),
+        }
+        for h in marine_data.get("forecast", [])
+    ]
+
     return {
         "location": {
             "id": location_info.get("id"),
@@ -565,6 +642,7 @@ def format_conditions_response(
         "wind": wind,
         "waves": waves,
         "tide": tide,
+        "forecast": forecast,
         "source": {
             "provider": "Stormglass",
             "updatedAt": updated_at,

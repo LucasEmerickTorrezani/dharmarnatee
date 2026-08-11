@@ -128,8 +128,12 @@
 
       <!-- ── Data section ──────────────────────────────────────────── -->
       <section id="dataSection" class="data-section" hidden aria-live="polite">
-        <!-- Location strip -->
-        <div id="locationStrip" class="location-strip"></div>
+        <!-- Location + compact contextual summary -->
+        <div
+          id="summaryCard"
+          class="summary-card"
+          aria-label="Local e resumo das condições atuais"
+        ></div>
 
         <!-- Four main cards -->
         <div class="cards-grid" role="region" aria-label="Condições atuais">
@@ -155,6 +159,14 @@
           ></article>
         </div>
 
+        <!-- Próximas horas: forecast snapshots + wind/wave trend charts -->
+        <article
+          id="forecastStrip"
+          class="card card--forecast"
+          aria-label="Previsão para as próximas horas"
+          hidden
+        ></article>
+
         <!-- Source / metadata card -->
         <article
           id="cardFonte"
@@ -174,7 +186,7 @@
     <footer class="app-footer">
       <p>DharMarnatee &nbsp;·&nbsp; Dados marinhos e meteorológicos</p>
       <p class="footer-note">
-        Dados informativos. Não utilizar para navegação.
+        Com carinho, pra dahrinha do meu coração s2
       </p>
     </footer>
 
